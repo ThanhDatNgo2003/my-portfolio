@@ -1,9 +1,19 @@
 "use client"
 
-import Image from "next/image"
+import dynamic from "next/dynamic"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { cn } from "@/lib/utils"
 import { useState, useRef, useEffect } from "react"
+
+// Dynamically import the 3D model to avoid SSR issues
+const DesktopPCModel = dynamic(() => import("./desktop-pc-model"), {
+  ssr: false,
+  loading: () => (
+    <div className="relative mx-auto md:mx-0 w-72 h-72 md:w-96 md:h-96 rounded-2xl overflow-hidden bg-primary/5 animate-pulse flex items-center justify-center">
+      <div className="w-16 h-16 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  ),
+})
 
 const techStack = [
   { name: "Next.js", color: "bg-foreground/10 text-foreground border-foreground/30", icon: "N" },
@@ -63,98 +73,6 @@ function TechBadge({
       <span className="relative z-10">{tech.name}</span>
       {isHovered && (
         <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/20 to-secondary/20 blur-sm -z-10" />
-      )}
-    </div>
-  )
-}
-
-// Animated profile card with 3D effect
-function ProfileCard({ isVisible }: { isVisible: boolean }) {
-  const [rotation, setRotation] = useState({ x: 0, y: 0 })
-  const [isHovered, setIsHovered] = useState(false)
-  const cardRef = useRef<HTMLDivElement>(null)
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left - rect.width / 2) / rect.width
-    const y = (e.clientY - rect.top - rect.height / 2) / rect.height
-    setRotation({ x: y * 15, y: -x * 15 })
-  }
-
-  const handleMouseLeave = () => {
-    setRotation({ x: 0, y: 0 })
-    setIsHovered(false)
-  }
-
-  return (
-    <div
-      ref={cardRef}
-      className={cn(
-        "relative mx-auto md:mx-0 transition-all duration-700 delay-200",
-        isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
-      )}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        perspective: "1000px",
-      }}
-    >
-      <div 
-        className="relative w-72 h-72 md:w-96 md:h-96 rounded-2xl overflow-hidden glass-card group"
-        style={{
-          transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-          transition: "transform 0.1s ease-out",
-          transformStyle: "preserve-3d",
-        }}
-      >
-        {/* Gradient overlay */}
-        <div 
-          className={cn(
-            "absolute inset-0 bg-gradient-to-br from-primary/30 via-transparent to-secondary/30 z-10 transition-opacity duration-500",
-            isHovered ? "opacity-60" : "opacity-40"
-          )}
-        />
-        
-        {/* Shine effect */}
-        <div 
-          className="absolute inset-0 z-20 pointer-events-none"
-          style={{
-            background: `radial-gradient(circle at ${50 + rotation.y * 3}% ${50 - rotation.x * 3}%, rgba(255,255,255,0.2) 0%, transparent 50%)`,
-          }}
-        />
-        
-        <Image
-          src="/profile-placeholder.jpg"
-          alt="Nguyen Thanh Dat"
-          fill
-          className={cn(
-            "object-cover transition-all duration-700",
-            isHovered ? "scale-110 brightness-110" : "scale-100 opacity-90"
-          )}
-        />
-        
-        {/* Floating particles inside card */}
-        {isHovered && (
-          <>
-            <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-primary rounded-full animate-ping z-30" />
-            <div className="absolute bottom-1/3 right-1/4 w-1 h-1 bg-secondary rounded-full animate-ping z-30" style={{ animationDelay: "0.5s" }} />
-          </>
-        )}
-      </div>
-      
-      {/* Decorative border with animation */}
-      <div 
-        className={cn(
-          "absolute -bottom-4 -right-4 w-full h-full border-2 rounded-2xl -z-10 transition-all duration-500",
-          isHovered ? "border-primary/60 -bottom-6 -right-6" : "border-primary/30"
-        )}
-      />
-      
-      {/* Glow effect */}
-      {isHovered && (
-        <div className="absolute inset-0 -z-20 blur-3xl bg-gradient-to-br from-primary/20 to-secondary/20" />
       )}
     </div>
   )
@@ -252,8 +170,8 @@ export default function About() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-          {/* Profile Image with 3D effect */}
-          <ProfileCard isVisible={sectionVisible} />
+          {/* 3D Desktop PC Model */}
+          <DesktopPCModel isVisible={sectionVisible} />
 
           {/* Bio Content */}
           <div
