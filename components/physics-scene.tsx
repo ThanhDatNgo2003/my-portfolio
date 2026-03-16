@@ -439,12 +439,8 @@ function Scene({ scrollProgress }: { scrollProgress: number }) {
 
 export default function PhysicsScene() {
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [opacity, setOpacity] = useState(0)
 
   useEffect(() => {
-    // Fade in after a longer delay so the page content renders first
-    const timer = setTimeout(() => setOpacity(1), 1200)
-
     const handleScroll = () => {
       const scrollTop = window.scrollY
       const docHeight = document.documentElement.scrollHeight - window.innerHeight
@@ -454,24 +450,16 @@ export default function PhysicsScene() {
 
     window.addEventListener("scroll", handleScroll, { passive: true })
     return () => {
-      clearTimeout(timer)
       window.removeEventListener("scroll", handleScroll)
     }
   }, [])
 
   return (
-    <div
-      className="fixed inset-0 -z-10 transition-opacity duration-[2000ms] pointer-events-none"
-      style={{ 
-        opacity,
-        willChange: 'opacity',
-      }}
-    >
+    <div className="fixed inset-0 -z-10 pointer-events-none">
       <Canvas
         camera={{ position: [0, 0, 8], fov: 75 }}
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true }}
-        style={{ opacity: opacity === 0 ? 0 : 1 }}
       >
         <Scene scrollProgress={scrollProgress} />
       </Canvas>
