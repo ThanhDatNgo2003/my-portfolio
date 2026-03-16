@@ -1,14 +1,13 @@
 "use client"
 
-import { useRef, useState, Suspense } from "react"
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { useGLTF, OrbitControls, Environment, ContactShadows } from "@react-three/drei"
+import { useRef, useState, Suspense, useEffect } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
+import { useGLTF, ContactShadows } from "@react-three/drei"
 import * as THREE from "three"
 
-function DesktopPC({ isHovered }: { isHovered: boolean }) {
+function DesktopPC({ scrollRotation }: { scrollRotation: number }) {
   const { scene } = useGLTF("/models/desktop_pc.glb")
   const modelRef = useRef<THREE.Group>(null)
-  const targetRotation = useRef({ x: 0, y: 0 })
 
   useFrame((state) => {
     if (modelRef.current) {
@@ -17,23 +16,12 @@ function DesktopPC({ isHovered }: { isHovered: boolean }) {
       // Idle floating animation
       modelRef.current.position.y = Math.sin(elapsed * 0.8) * 0.1
       
-      // Gentle idle rotation when not hovered
-      if (!isHovered) {
-        targetRotation.current.y = Math.sin(elapsed * 0.3) * 0.15
-      }
-      
-      // Smooth rotation interpolation
+      // Smooth rotation based on scroll
       modelRef.current.rotation.y = THREE.MathUtils.lerp(
         modelRef.current.rotation.y,
-        targetRotation.current.y,
-        0.05
+        scrollRotation,
+        0.08
       )
-      
-      // Scale effect on hover
-      const targetScale = isHovered ? 1.05 : 1
-      modelRef.current.scale.x = THREE.MathUtils.lerp(modelRef.current.scale.x, targetScale, 0.1)
-      modelRef.current.scale.y = THREE.MathUtils.lerp(modelRef.current.scale.y, targetScale, 0.1)
-      modelRef.current.scale.z = THREE.MathUtils.lerp(modelRef.current.scale.z, targetScale, 0.1)
     }
   })
 
@@ -41,25 +29,12 @@ function DesktopPC({ isHovered }: { isHovered: boolean }) {
     <group ref={modelRef} dispose={null}>
       <primitive 
         object={scene} 
-        scale={0.75}
-        position={[0, -1.5, 0]}
+        scale={1.2}
+        position={[0, -1.2, 0]}
         rotation={[0, -0.5, 0]}
       />
     </group>
   )
-}
-
-function MouseTracker({ setTargetRotation }: { setTargetRotation: (rotation: { x: number; y: number }) => void }) {
-  const { pointer } = useThree()
-  
-  useFrame(() => {
-    setTargetRotation({
-      x: pointer.y * 0.2,
-      y: pointer.x * 0.4
-    })
-  })
-  
-  return null
 }
 
 function Lighting() {
@@ -110,72 +85,60 @@ function LoadingFallback() {
 }
 
 export default function DesktopPCModel({ isVisible }: { isVisible: boolean }) {
-  const [isHovered, setIsHovered] = useState(false)
+  const [scrollRotation, setScrollRotation] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return
+      
+      const rect = containerRef.current.getBoundingClientRect()
+      const windowHeight = window.innerHeight
+      
+      // Calculate how far through the viewport the element is
+      const elementCenter = rect.top + rect.height / 2
+      const viewportCenter = windowHeight / 2
+      const distanceFromCenter = elementCenter - viewportCenter
+      
+      // Normalize to a rotation value (-1 to 1 range, then scale)
+      const normalizedPosition = distanceFromCenter / windowHeight
+      const rotation = normalizedPosition * Math.PI * 0.8 // Rotate up to ~72 degrees each way
+      
+      setScrollRotation(-rotation)
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    handleScroll() // Initial calculation
+    
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   return (
     <div
       ref={containerRef}
-      className={`relative mx-auto md:mx-0 w-72 h-72 md:w-96 md:h-96 rounded-2xl overflow-hidden transition-all duration-700 delay-200 ${
+      className={`relative mx-auto md:mx-0 w-80 h-80 md:w-[450px] md:h-[450px] rounded-2xl overflow-hidden transition-all duration-700 delay-200 ${
         isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
       }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Background glow effect */}
-      <div 
-        className={`absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 rounded-2xl transition-opacity duration-500 ${
-          isHovered ? "opacity-80" : "opacity-40"
-        }`}
-      />
-      
-      {/* Glass card border */}
-      <div className="absolute inset-0 rounded-2xl border border-primary/20 backdrop-blur-sm" />
-      
       {/* 3D Canvas */}
       <Canvas
-        camera={{ position: [0, 0, 5], fov: 50 }}
+        camera={{ position: [0, 0, 4], fov: 50 }}
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
       >
         <Suspense fallback={<LoadingFallback />}>
           <Lighting />
-          <DesktopPC isHovered={isHovered} />
+          <DesktopPC scrollRotation={scrollRotation} />
           <ContactShadows
-            position={[0, -2, 0]}
+            position={[0, -1.8, 0]}
             opacity={0.4}
             scale={10}
             blur={2}
             far={4}
           />
-          <OrbitControls
-            enableZoom={false}
-            enablePan={false}
-            minPolarAngle={Math.PI / 3}
-            maxPolarAngle={Math.PI / 1.8}
-            rotateSpeed={0.5}
-          />
         </Suspense>
       </Canvas>
-      
-      {/* Decorative corner elements */}
-      <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-primary/50 rounded-tl" />
-      <div className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-primary/50 rounded-tr" />
-      <div className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-secondary/50 rounded-bl" />
-      <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-secondary/50 rounded-br" />
-      
-      {/* Decorative offset border */}
-      <div 
-        className={`absolute -bottom-4 -right-4 w-full h-full border-2 rounded-2xl -z-10 transition-all duration-500 ${
-          isHovered ? "border-primary/60 -bottom-6 -right-6" : "border-primary/30"
-        }`}
-      />
-      
-      {/* Hover glow */}
-      {isHovered && (
-        <div className="absolute inset-0 -z-20 blur-3xl bg-gradient-to-br from-primary/20 to-secondary/20" />
-      )}
     </div>
   )
 }
