@@ -16,11 +16,11 @@ function DesktopPC({ scrollRotation }: { scrollRotation: number }) {
       // Idle floating animation
       modelRef.current.position.y = Math.sin(elapsed * 0.8) * 0.1
       
-      // Smooth rotation based on scroll
+      // Smooth rotation based on scroll (lower lerp value = smoother)
       modelRef.current.rotation.y = THREE.MathUtils.lerp(
         modelRef.current.rotation.y,
         scrollRotation,
-        0.08
+        0.03
       )
     }
   })
@@ -29,8 +29,8 @@ function DesktopPC({ scrollRotation }: { scrollRotation: number }) {
     <group ref={modelRef} dispose={null}>
       <primitive 
         object={scene} 
-        scale={1.2}
-        position={[0, -1.2, 0]}
+        scale={2}
+        position={[0, -2, 0]}
         rotation={[0, -0.5, 0]}
       />
     </group>
@@ -116,13 +116,13 @@ export default function DesktopPCModel({ isVisible }: { isVisible: boolean }) {
   return (
     <div
       ref={containerRef}
-      className={`relative mx-auto md:mx-0 w-80 h-80 md:w-[450px] md:h-[450px] rounded-2xl overflow-hidden transition-all duration-700 delay-200 ${
+      className={`relative mx-auto md:mx-0 w-96 h-96 md:w-[550px] md:h-[550px] rounded-2xl overflow-hidden transition-all duration-700 delay-200 ${
         isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
       }`}
     >
       {/* 3D Canvas */}
       <Canvas
-        camera={{ position: [0, 0, 4], fov: 50 }}
+        camera={{ position: [0, 0, 5], fov: 50 }}
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
@@ -131,11 +131,11 @@ export default function DesktopPCModel({ isVisible }: { isVisible: boolean }) {
           <Lighting />
           <DesktopPC scrollRotation={scrollRotation} />
           <ContactShadows
-            position={[0, -1.8, 0]}
+            position={[0, -2.5, 0]}
             opacity={0.4}
-            scale={10}
+            scale={12}
             blur={2}
-            far={4}
+            far={5}
           />
         </Suspense>
       </Canvas>
