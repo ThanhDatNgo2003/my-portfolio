@@ -370,7 +370,7 @@ function FloatingRing({
   )
 }
 
-// Camera controller with parallax
+// Camera controller with parallax - centered view
 function CameraController({ scrollProgress }: { scrollProgress: number }) {
   const { camera } = useThree()
   const targetPosition = useRef({ x: 0, y: 0, z: 8 })
@@ -378,15 +378,17 @@ function CameraController({ scrollProgress }: { scrollProgress: number }) {
   useFrame((state) => {
     const { pointer } = state
     
-    targetPosition.current.x = pointer.x * 1.5
-    targetPosition.current.y = pointer.y * 1.5 - scrollProgress * 10
-    targetPosition.current.z = 8 + scrollProgress * 5
+    // Reduced mouse influence for more centered view
+    targetPosition.current.x = pointer.x * 0.5
+    targetPosition.current.y = pointer.y * 0.5 - scrollProgress * 8
+    targetPosition.current.z = 8 + scrollProgress * 4
     
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetPosition.current.x, 0.08)
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetPosition.current.y, 0.08)
-    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetPosition.current.z, 0.08)
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetPosition.current.x, 0.05)
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetPosition.current.y, 0.05)
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetPosition.current.z, 0.05)
     
-    camera.lookAt(0, scrollProgress * -5, 0)
+    // Look at center
+    camera.lookAt(0, scrollProgress * -3, 0)
   })
 
   return null

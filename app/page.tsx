@@ -15,16 +15,11 @@ const PhysicsScene = dynamic(() => import("@/components/physics-scene"), {
   ssr: false,
 })
 
-const MagneticCursor = dynamic(() => import("@/components/magnetic-cursor"), {
-  ssr: false,
-})
+
 
 export default function Home() {
   return (
     <LenisProvider>
-      {/* Custom magnetic cursor */}
-      <MagneticCursor />
-      
       {/* 3D Physics background */}
       <PhysicsScene />
       

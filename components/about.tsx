@@ -15,7 +15,7 @@ const techStack = [
   { name: "Raspberry Pi", color: "bg-[#A22846]/20 text-[#A22846] border-[#A22846]/30", icon: "R" },
 ]
 
-// Interactive tech badge with 3D tilt
+// Interactive tech badge with light effect on hover
 function TechBadge({ 
   tech, 
   index, 
@@ -25,45 +25,49 @@ function TechBadge({
   index: number
   isVisible: boolean 
 }) {
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const [isHovered, setIsHovered] = useState(false)
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 })
   const badgeRef = useRef<HTMLDivElement>(null)
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!badgeRef.current) return
     const rect = badgeRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left - rect.width / 2) / rect.width
-    const y = (e.clientY - rect.top - rect.height / 2) / rect.height
-    setTilt({ x: y * 20, y: -x * 20 })
-  }
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 })
-    setIsHovered(false)
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setMousePos({ x, y })
   }
 
   return (
     <div
       ref={badgeRef}
       className={cn(
-        "tech-badge relative px-5 py-3 rounded-xl text-sm font-mono border transition-all duration-500 cursor-pointer",
+        "tech-badge relative px-5 py-3 rounded-xl text-sm font-mono border cursor-pointer overflow-hidden transition-opacity duration-500",
         tech.color,
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
-        isHovered && "scale-110 z-10"
+        isVisible ? "opacity-100" : "opacity-0",
+        isHovered && "scale-105 z-10"
       )}
       style={{ 
-        transitionDelay: `${600 + index * 100}ms`,
-        transform: `perspective(500px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) ${isHovered ? "scale(1.1)" : "scale(1)"}`,
+        transitionDelay: isVisible ? `${600 + index * 100}ms` : '0ms',
+        transition: 'opacity 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease',
+        boxShadow: isHovered 
+          ? `0 0 20px rgba(0, 217, 255, 0.4), 0 0 40px rgba(0, 217, 255, 0.2), inset 0 0 20px rgba(0, 217, 255, 0.1)` 
+          : 'none',
       }}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      data-magnetic
+      onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Light effect following cursor */}
+      <div 
+        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+        style={{
+          background: isHovered 
+            ? `radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, rgba(0, 217, 255, 0.3) 0%, transparent 60%)`
+            : 'transparent',
+          opacity: isHovered ? 1 : 0,
+        }}
+      />
       <span className="relative z-10">{tech.name}</span>
-      {isHovered && (
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/20 to-secondary/20 blur-sm -z-10" />
-      )}
     </div>
   )
 }
