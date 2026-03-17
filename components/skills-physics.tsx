@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react"
 import { cn } from "@/lib/utils"
+import ScrollReveal, { LineReveal } from "@/components/scroll-reveal"
 
 // Skills data with theme-consistent colors (primary: #00D9FF, secondary: #7C3AED)
 const skills = [
@@ -403,28 +404,19 @@ export default function SkillsPhysics() {
       {/* Header */}
       <div className="container mx-auto max-w-6xl relative z-10">
         <div className="text-center mb-8">
-          <h2 
-            className={cn(
-              "font-mono text-3xl md:text-5xl font-bold transition-all duration-700",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-            )}
-          >
-            <span className="text-primary">02.</span> Skills
-          </h2>
-          <div 
-            className={cn(
-              "h-1 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-4 transition-all duration-1000 delay-300",
-              isVisible ? "w-32 opacity-100" : "w-0 opacity-0"
-            )}
-          />
-          <p 
-            className={cn(
-              "text-muted-foreground mt-6 text-lg transition-all duration-700 delay-200",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            )}
-          >
-            Drag, throw, and play with my skills!
-          </p>
+          <ScrollReveal direction="down" duration={1000}>
+            <h2 className="font-mono text-3xl md:text-5xl font-bold">
+              <span className="text-primary">02.</span> Skills
+            </h2>
+          </ScrollReveal>
+          <div className="flex justify-center mt-4">
+            <LineReveal direction="center" delay={300} duration={1000} className="w-32" />
+          </div>
+          <ScrollReveal direction="up" delay={400} duration={800}>
+            <p className="text-muted-foreground mt-6 text-lg">
+              Drag, throw, and play with my skills!
+            </p>
+          </ScrollReveal>
         </div>
       </div>
       

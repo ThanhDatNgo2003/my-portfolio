@@ -6,6 +6,7 @@ import { Github, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { cn } from "@/lib/utils"
+import ScrollReveal, { LineReveal } from "@/components/scroll-reveal"
 
 const projects = [
   {
@@ -318,20 +319,19 @@ export default function Projects3DEnhanced() {
       <div className="container mx-auto max-w-6xl">
         {/* Section header */}
         <div className="text-center mb-16">
-          <h2
-            className={cn(
-              "font-mono text-4xl md:text-5xl font-bold transition-all duration-700",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-            )}
-          >
-            <span className="text-primary">02.</span> Featured Projects
-          </h2>
-          <div
-            className={cn(
-              "h-1 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-6 transition-all duration-1000 delay-200",
-              isVisible ? "w-40 opacity-100" : "w-0 opacity-0"
-            )}
-          />
+          <ScrollReveal direction="down" duration={1000}>
+            <h2 className="font-mono text-4xl md:text-5xl font-bold">
+              <span className="text-primary">03.</span> Featured Projects
+            </h2>
+          </ScrollReveal>
+          <div className="flex justify-center mt-6">
+            <LineReveal 
+              direction="center" 
+              delay={300} 
+              duration={1000} 
+              className="w-40" 
+            />
+          </div>
         </div>
 
         {/* 3D Cards Grid */}
@@ -348,23 +348,20 @@ export default function Projects3DEnhanced() {
         </div>
 
         {/* Bottom CTA */}
-        <div
-          className={cn(
-            "text-center mt-16 transition-all duration-700 delay-500",
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          )}
-        >
-          <Link
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 font-mono text-primary hover:text-primary/80 transition-colors group"
-            data-magnetic
-          >
-            <span>Explore more projects</span>
-            <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
+        <ScrollReveal direction="up" delay={400} duration={800}>
+          <div className="text-center mt-16">
+            <Link
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 font-mono text-primary hover:text-primary/80 transition-colors group"
+              data-magnetic
+            >
+              <span>Explore more projects</span>
+              <ExternalLink className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   )

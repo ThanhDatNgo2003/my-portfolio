@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { cn } from "@/lib/utils"
 import { useState, useRef } from "react"
+import ScrollReveal, { TextReveal, LineReveal } from "@/components/scroll-reveal"
 
 const contactLinks = [
   {
@@ -177,31 +178,22 @@ export default function Contact() {
       <div className="container mx-auto max-w-3xl text-center">
         {/* Section title */}
         <div className="relative mb-8">
-          <h2 
-            className={cn(
-              "font-mono text-3xl md:text-5xl font-bold transition-all duration-700",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-            )}
-          >
-            <span className="text-primary">03.</span> Get In Touch
-          </h2>
-          <div 
-            className={cn(
-              "h-1 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-4 transition-all duration-1000 delay-300",
-              isVisible ? "w-32 opacity-100" : "w-0 opacity-0"
-            )}
-          />
+          <ScrollReveal direction="down" duration={1000}>
+            <h2 className="font-mono text-3xl md:text-5xl font-bold">
+              <span className="text-primary">04.</span> Get In Touch
+            </h2>
+          </ScrollReveal>
+          <div className="flex justify-center mt-4">
+            <LineReveal direction="center" delay={300} duration={1000} className="w-32" />
+          </div>
         </div>
 
-        <p 
-          className={cn(
-            "text-muted-foreground text-lg md:text-xl mb-12 max-w-lg mx-auto transition-all duration-700 delay-200",
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          )}
-        >
-          I&apos;m always open to discussing new projects, opportunities, or just 
-          having a chat about technology. Feel free to reach out!
-        </p>
+        <ScrollReveal direction="up" delay={200} duration={800}>
+          <p className="text-muted-foreground text-lg md:text-xl mb-12 max-w-lg mx-auto">
+            I&apos;m always open to discussing new projects, opportunities, or just 
+            having a chat about technology. Feel free to reach out!
+          </p>
+        </ScrollReveal>
 
         {/* Contact cards */}
         <div className="flex flex-wrap items-center justify-center gap-6 mb-12">
@@ -216,12 +208,7 @@ export default function Contact() {
         </div>
 
         {/* CTA Button */}
-        <div 
-          className={cn(
-            "transition-all duration-700 delay-700",
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          )}
-        >
+        <ScrollReveal direction="scale" delay={500} duration={800}>
           <Link
             href="mailto:dat@example.com"
             className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-mono rounded-full hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 group"
@@ -230,7 +217,7 @@ export default function Contact() {
             <Send className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
             <span>Say Hello</span>
           </Link>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   )
