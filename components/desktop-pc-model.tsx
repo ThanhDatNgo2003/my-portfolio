@@ -29,8 +29,8 @@ function DesktopPC({ scrollRotation }: { scrollRotation: number }) {
     <group ref={modelRef} dispose={null}>
       <primitive 
         object={scene} 
-        scale={2}
-        position={[0, -2, 0]}
+        scale={2.8}
+        position={[0, -2.5, 0]}
         rotation={[0, -0.5, 0]}
       />
     </group>
@@ -116,13 +116,13 @@ export default function DesktopPCModel({ isVisible }: { isVisible: boolean }) {
   return (
     <div
       ref={containerRef}
-      className={`relative mx-auto md:mx-0 w-96 h-96 md:w-[550px] md:h-[550px] rounded-2xl overflow-hidden transition-all duration-700 delay-200 ${
+      className={`relative mx-auto md:mx-0 w-[400px] h-[400px] md:w-[600px] md:h-[600px] rounded-2xl overflow-hidden transition-all duration-700 delay-200 ${
         isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
       }`}
     >
       {/* 3D Canvas */}
       <Canvas
-        camera={{ position: [0, 0, 5], fov: 50 }}
+        camera={{ position: [0, 0, 6], fov: 50 }}
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
@@ -131,11 +131,11 @@ export default function DesktopPCModel({ isVisible }: { isVisible: boolean }) {
           <Lighting />
           <DesktopPC scrollRotation={scrollRotation} />
           <ContactShadows
-            position={[0, -2.5, 0]}
+            position={[0, -3, 0]}
             opacity={0.4}
-            scale={12}
+            scale={14}
             blur={2}
-            far={5}
+            far={6}
           />
         </Suspense>
       </Canvas>

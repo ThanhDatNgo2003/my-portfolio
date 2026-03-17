@@ -3,24 +3,24 @@
 import { useRef, useState, useEffect, useCallback } from "react"
 import { cn } from "@/lib/utils"
 
-// Skills data with colors
+// Skills data with theme-consistent colors (primary: #00D9FF, secondary: #7C3AED)
 const skills = [
-  { name: "React", color: "#61DAFB", textColor: "#000" },
-  { name: "Next.js", color: "#ffffff", textColor: "#000" },
-  { name: "TypeScript", color: "#3178C6", textColor: "#fff" },
-  { name: "Node.js", color: "#339933", textColor: "#fff" },
-  { name: "Docker", color: "#2496ED", textColor: "#fff" },
-  { name: "PostgreSQL", color: "#4169E1", textColor: "#fff" },
-  { name: "Linux", color: "#FCC624", textColor: "#000" },
-  { name: "AWS", color: "#FF9900", textColor: "#000" },
-  { name: "Python", color: "#3776AB", textColor: "#fff" },
-  { name: "Git", color: "#F05032", textColor: "#fff" },
-  { name: "Kubernetes", color: "#326CE5", textColor: "#fff" },
-  { name: "Redis", color: "#DC382D", textColor: "#fff" },
-  { name: "GraphQL", color: "#E10098", textColor: "#fff" },
-  { name: "Tailwind", color: "#06B6D4", textColor: "#000" },
-  { name: "MongoDB", color: "#47A248", textColor: "#fff" },
-  { name: "Nginx", color: "#009639", textColor: "#fff" },
+  { name: "React", color: "#00D9FF", textColor: "#0A0A0F" },
+  { name: "Next.js", color: "#1A1A24", textColor: "#E5E5E5" },
+  { name: "TypeScript", color: "#7C3AED", textColor: "#FFFFFF" },
+  { name: "Node.js", color: "#10B981", textColor: "#0A0A0F" },
+  { name: "Docker", color: "#00D9FF", textColor: "#0A0A0F" },
+  { name: "PostgreSQL", color: "#7C3AED", textColor: "#FFFFFF" },
+  { name: "Linux", color: "#F59E0B", textColor: "#0A0A0F" },
+  { name: "AWS", color: "#1A1A24", textColor: "#E5E5E5" },
+  { name: "Python", color: "#00D9FF", textColor: "#0A0A0F" },
+  { name: "Git", color: "#EF4444", textColor: "#FFFFFF" },
+  { name: "Kubernetes", color: "#7C3AED", textColor: "#FFFFFF" },
+  { name: "Redis", color: "#EF4444", textColor: "#FFFFFF" },
+  { name: "GraphQL", color: "#7C3AED", textColor: "#FFFFFF" },
+  { name: "Tailwind", color: "#00D9FF", textColor: "#0A0A0F" },
+  { name: "MongoDB", color: "#10B981", textColor: "#0A0A0F" },
+  { name: "Nginx", color: "#1A1A24", textColor: "#E5E5E5" },
 ]
 
 interface Particle {
@@ -398,7 +398,7 @@ export default function SkillsPhysics() {
       {/* Physics Canvas */}
       <div 
         ref={canvasRef}
-        className="absolute inset-0 top-40 overflow-hidden cursor-grab active:cursor-grabbing"
+        className="absolute inset-0 top-40 overflow-hidden"
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
@@ -409,10 +409,10 @@ export default function SkillsPhysics() {
           <div
             key={particle.id}
             className={cn(
-              "absolute select-none cursor-grab active:cursor-grabbing",
+              "absolute select-none",
               "rounded-full px-5 py-2.5 font-semibold text-sm shadow-lg",
               "transition-shadow duration-200 hover:shadow-xl",
-              "border border-white/20"
+              "border border-white/10"
             )}
             style={{
               left: particle.x - particle.width / 2,
