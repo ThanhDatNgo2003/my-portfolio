@@ -10,6 +10,7 @@ import Contact from "@/components/contact"
 import Footer from "@/components/footer"
 import ParallaxText from "@/components/parallax-text"
 import SectionDivider from "@/components/section-divider"
+import ScrollProgressBar from "@/components/scroll-progress-bar"
 
 const PhysicsScene = dynamic(() => import("@/components/physics-scene"), {
   ssr: false,
@@ -31,6 +32,9 @@ const SkillsPhysics = dynamic(() => import("@/components/skills-physics"), {
 export default function Home() {
   return (
     <LenisProvider>
+      {/* Scroll progress indicator */}
+      <ScrollProgressBar />
+      
       {/* Custom magnetic cursor */}
       <MagneticCursor />
       
@@ -41,31 +45,33 @@ export default function Home() {
         <Navbar />
         <Hero />
         
-        {/* Parallax text divider */}
-        <ParallaxText direction="left" speed={30}>
+        {/* Parallax text divider - velocity-reactive */}
+        <ParallaxText direction="left" speed={40} scrollBased>
           DEVELOPER
         </ParallaxText>
         
         <About />
         
-        {/* Section divider with particles */}
-        <SectionDivider />
+        {/* Wave divider */}
+        <SectionDivider variant="wave" />
         
-        <ParallaxText direction="right" speed={40}>
+        <ParallaxText direction="right" speed={50} scrollBased>
           SKILLS
         </ParallaxText>
         
         <SkillsPhysics />
         
-        <SectionDivider />
+        {/* Grid divider */}
+        <SectionDivider variant="grid" />
         
-        <ParallaxText direction="left" speed={35}>
+        <ParallaxText direction="left" speed={45} scrollBased>
           PROJECTS
         </ParallaxText>
         
         <Projects3DEnhanced />
         
-        <SectionDivider />
+        {/* Orbs divider */}
+        <SectionDivider variant="orbs" />
         
         <Contact />
         <Footer />

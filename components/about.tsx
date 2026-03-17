@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { cn } from "@/lib/utils"
 import { useState, useRef, useEffect } from "react"
+import ScrollReveal, { TextReveal, LineReveal } from "@/components/scroll-reveal"
 
 // Dynamically import the 3D model to avoid SSR issues
 const DesktopPCModel = dynamic(() => import("./desktop-pc-model"), {
@@ -90,56 +91,64 @@ export default function About() {
       <div className="container mx-auto max-w-6xl">
         {/* Section title with animated underline */}
         <div className="relative mb-16 text-center">
-          <h2 
-            className={cn(
-              "font-mono text-3xl md:text-5xl font-bold transition-all duration-700",
-              sectionVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-            )}
-          >
-            <span className="text-primary">01.</span> About Me
-          </h2>
-          <div 
-            className={cn(
-              "h-1 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-4 transition-all duration-1000 delay-300",
-              sectionVisible ? "w-32 opacity-100" : "w-0 opacity-0"
-            )}
-          />
+          <ScrollReveal direction="down" duration={1000}>
+            <h2 className="font-mono text-3xl md:text-5xl font-bold">
+              <span className="text-primary">01.</span> About Me
+            </h2>
+          </ScrollReveal>
+          <div className="flex justify-center mt-4">
+            <LineReveal 
+              direction="center" 
+              delay={300} 
+              duration={1000} 
+              className="w-32" 
+            />
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* 3D Desktop PC Model */}
-          <DesktopPCModel isVisible={sectionVisible} />
+          <div className="flex justify-center">
+            <DesktopPCModel isVisible={sectionVisible} />
+          </div>
 
           {/* Bio Content */}
           <div
             ref={contentRef}
-            className={cn(
-              "space-y-6 transition-all duration-1000 delay-400",
-              contentVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-10"
-            )}
+            className="space-y-6"
           >
-            <p className="text-muted-foreground leading-relaxed text-lg">
-              Hi! I&apos;m <span className="text-primary font-semibold">Dat</span>, a passionate full-stack developer and DevOps engineer 
-              based in Vietnam. I specialize in building robust web applications 
-              and managing cloud infrastructure that scales.
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              My journey in tech started with tinkering on Raspberry Pi projects 
-              and has evolved into designing and deploying production-grade systems. 
-              I believe in writing clean, maintainable code and automating everything 
-              that can be automated.
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              When I&apos;m not coding, you&apos;ll find me exploring new technologies, 
-              contributing to open-source projects, or optimizing server configurations.
-            </p>
+            <ScrollReveal direction="right" delay={100} duration={800}>
+              <p className="text-muted-foreground leading-relaxed text-lg">
+                Hi! I&apos;m <span className="text-primary font-semibold">Dat</span>, a passionate full-stack developer and DevOps engineer 
+                based in Vietnam. I specialize in building robust web applications 
+                and managing cloud infrastructure that scales.
+              </p>
+            </ScrollReveal>
+            
+            <ScrollReveal direction="right" delay={200} duration={800}>
+              <p className="text-muted-foreground leading-relaxed">
+                My journey in tech started with tinkering on Raspberry Pi projects 
+                and has evolved into designing and deploying production-grade systems. 
+                I believe in writing clean, maintainable code and automating everything 
+                that can be automated.
+              </p>
+            </ScrollReveal>
+            
+            <ScrollReveal direction="right" delay={300} duration={800}>
+              <p className="text-muted-foreground leading-relaxed">
+                When I&apos;m not coding, you&apos;ll find me exploring new technologies, 
+                contributing to open-source projects, or optimizing server configurations.
+              </p>
+            </ScrollReveal>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 py-6 border-y border-border/50">
-              <AnimatedStat value="3+" label="Years Experience" delay={0} />
-              <AnimatedStat value="20+" label="Projects" delay={200} />
-              <AnimatedStat value="10+" label="Technologies" delay={400} />
-            </div>
+            <ScrollReveal direction="up" delay={400} duration={900}>
+              <div className="grid grid-cols-3 gap-4 py-6 border-y border-border/50">
+                <AnimatedStat value="3+" label="Years Experience" delay={0} />
+                <AnimatedStat value="20+" label="Projects" delay={200} />
+                <AnimatedStat value="10+" label="Technologies" delay={400} />
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </div>

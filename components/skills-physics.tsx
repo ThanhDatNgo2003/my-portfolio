@@ -2,25 +2,26 @@
 
 import { useRef, useState, useEffect, useCallback } from "react"
 import { cn } from "@/lib/utils"
+import ScrollReveal, { LineReveal } from "@/components/scroll-reveal"
 
 // Skills data with theme-consistent colors (primary: #00D9FF, secondary: #7C3AED)
 const skills = [
-  { name: "React", color: "#00D9FF", textColor: "#0A0A0F" },
-  { name: "Next.js", color: "#1A1A24", textColor: "#E5E5E5" },
-  { name: "TypeScript", color: "#7C3AED", textColor: "#FFFFFF" },
-  { name: "Node.js", color: "#10B981", textColor: "#0A0A0F" },
-  { name: "Docker", color: "#00D9FF", textColor: "#0A0A0F" },
-  { name: "PostgreSQL", color: "#7C3AED", textColor: "#FFFFFF" },
-  { name: "Linux", color: "#F59E0B", textColor: "#0A0A0F" },
-  { name: "AWS", color: "#1A1A24", textColor: "#E5E5E5" },
-  { name: "Python", color: "#00D9FF", textColor: "#0A0A0F" },
-  { name: "Git", color: "#EF4444", textColor: "#FFFFFF" },
-  { name: "Kubernetes", color: "#7C3AED", textColor: "#FFFFFF" },
-  { name: "Redis", color: "#EF4444", textColor: "#FFFFFF" },
-  { name: "GraphQL", color: "#7C3AED", textColor: "#FFFFFF" },
-  { name: "Tailwind", color: "#00D9FF", textColor: "#0A0A0F" },
-  { name: "MongoDB", color: "#10B981", textColor: "#0A0A0F" },
-  { name: "Nginx", color: "#1A1A24", textColor: "#E5E5E5" },
+  { name: "React", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "Next.js", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
+  { name: "TypeScript", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Node.js", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "Docker", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "PostgreSQL", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Linux", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
+  { name: "AWS", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
+  { name: "Python", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "Git", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Kubernetes", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Redis", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "GraphQL", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Tailwind", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "MongoDB", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
+  { name: "Nginx", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
 ]
 
 interface Particle {
@@ -35,6 +36,7 @@ interface Particle {
   height: number
   skill: typeof skills[0]
   isDragging: boolean
+  isHovered: boolean
 }
 
 // Simple physics constants
@@ -74,6 +76,7 @@ export default function SkillsPhysics() {
       height: 44,
       skill,
       isDragging: false,
+      isHovered: false,
     }))
     
     particlesRef.current = newParticles
@@ -157,7 +160,7 @@ export default function SkillsPhysics() {
         }
       })
 
-      // Collision detection between particles
+      // Collision detection between particles - improved for proper bouncing
       for (let i = 0; i < particlesRef.current.length; i++) {
         for (let j = i + 1; j < particlesRef.current.length; j++) {
           const p1 = particlesRef.current[i]
@@ -168,29 +171,45 @@ export default function SkillsPhysics() {
           const dx = p2.x - p1.x
           const dy = p2.y - p1.y
           const dist = Math.sqrt(dx * dx + dy * dy)
-          const minDist = (p1.width + p2.width) / 3
+          const minDist = (p1.width + p2.width) / 2.5
           
           if (dist < minDist && dist > 0) {
-            // Push apart
-            const overlap = (minDist - dist) / 2
+            // Normalize collision vector
             const nx = dx / dist
             const ny = dy / dist
             
-            particlesRef.current[i] = {
-              ...p1,
-              x: p1.x - nx * overlap,
-              y: p1.y - ny * overlap,
-              vx: p1.vx - nx * 2,
-              vy: p1.vy - ny * 2,
-              angularVel: p1.angularVel + (Math.random() - 0.5) * 2,
-            }
-            particlesRef.current[j] = {
-              ...p2,
-              x: p2.x + nx * overlap,
-              y: p2.y + ny * overlap,
-              vx: p2.vx + nx * 2,
-              vy: p2.vy + ny * 2,
-              angularVel: p2.angularVel + (Math.random() - 0.5) * 2,
+            // Calculate relative velocity
+            const dvx = p1.vx - p2.vx
+            const dvy = p1.vy - p2.vy
+            
+            // Relative velocity along collision normal
+            const dvn = dvx * nx + dvy * ny
+            
+            // Only resolve if particles are moving towards each other
+            if (dvn > 0) {
+              // Collision impulse (assuming equal mass)
+              const restitution = 0.8
+              const impulse = dvn * restitution
+              
+              // Push apart to prevent overlap
+              const overlap = (minDist - dist) / 2
+              
+              particlesRef.current[i] = {
+                ...p1,
+                x: p1.x - nx * overlap * 1.1,
+                y: p1.y - ny * overlap * 1.1,
+                vx: p1.vx - impulse * nx,
+                vy: p1.vy - impulse * ny,
+                angularVel: p1.angularVel + (dvn * 0.1) * (Math.random() > 0.5 ? 1 : -1),
+              }
+              particlesRef.current[j] = {
+                ...p2,
+                x: p2.x + nx * overlap * 1.1,
+                y: p2.y + ny * overlap * 1.1,
+                vx: p2.vx + impulse * nx,
+                vy: p2.vy + impulse * ny,
+                angularVel: p2.angularVel + (dvn * 0.1) * (Math.random() > 0.5 ? 1 : -1),
+              }
             }
           }
         }
@@ -361,6 +380,21 @@ export default function SkillsPhysics() {
     dragRef.current = null
   }, [])
 
+  // Hover handlers for light effect
+  const handleMouseEnter = useCallback((particleId: number) => {
+    particlesRef.current = particlesRef.current.map(p => 
+      p.id === particleId ? { ...p, isHovered: true } : p
+    )
+    setParticles([...particlesRef.current])
+  }, [])
+
+  const handleMouseLeave = useCallback((particleId: number) => {
+    particlesRef.current = particlesRef.current.map(p => 
+      p.id === particleId ? { ...p, isHovered: false } : p
+    )
+    setParticles([...particlesRef.current])
+  }, [])
+
   return (
     <section
       id="skills"
@@ -370,28 +404,19 @@ export default function SkillsPhysics() {
       {/* Header */}
       <div className="container mx-auto max-w-6xl relative z-10">
         <div className="text-center mb-8">
-          <h2 
-            className={cn(
-              "font-mono text-3xl md:text-5xl font-bold transition-all duration-700",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-            )}
-          >
-            <span className="text-primary">02.</span> Skills
-          </h2>
-          <div 
-            className={cn(
-              "h-1 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-4 transition-all duration-1000 delay-300",
-              isVisible ? "w-32 opacity-100" : "w-0 opacity-0"
-            )}
-          />
-          <p 
-            className={cn(
-              "text-muted-foreground mt-6 text-lg transition-all duration-700 delay-200",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            )}
-          >
-            Drag, throw, and play with my skills!
-          </p>
+          <ScrollReveal direction="down" duration={1000}>
+            <h2 className="font-mono text-3xl md:text-5xl font-bold">
+              <span className="text-primary">02.</span> Skills
+            </h2>
+          </ScrollReveal>
+          <div className="flex justify-center mt-4">
+            <LineReveal direction="center" delay={300} duration={1000} className="w-32" />
+          </div>
+          <ScrollReveal direction="up" delay={400} duration={800}>
+            <p className="text-muted-foreground mt-6 text-lg">
+              Drag, throw, and play with my skills!
+            </p>
+          </ScrollReveal>
         </div>
       </div>
       
@@ -409,9 +434,8 @@ export default function SkillsPhysics() {
           <div
             key={particle.id}
             className={cn(
-              "absolute select-none",
-              "rounded-full px-5 py-2.5 font-semibold text-sm shadow-lg",
-              "transition-shadow duration-200 hover:shadow-xl",
+              "absolute select-none cursor-grab active:cursor-grabbing",
+              "rounded-full px-5 py-2.5 font-semibold text-sm",
               "border border-white/10"
             )}
             style={{
@@ -422,12 +446,17 @@ export default function SkillsPhysics() {
               backgroundColor: particle.skill.color,
               color: particle.skill.textColor,
               transform: `rotate(${particle.rotation}deg)`,
-              zIndex: particle.isDragging ? 100 : 10,
+              zIndex: particle.isDragging ? 100 : particle.isHovered ? 50 : 10,
               boxShadow: particle.isDragging 
-                ? `0 20px 40px rgba(0,0,0,0.3), 0 0 20px ${particle.skill.color}50`
+                ? `0 20px 40px rgba(0,0,0,0.3), 0 0 30px ${particle.skill.glowColor}`
+                : particle.isHovered
+                ? `0 8px 24px rgba(0,0,0,0.25), 0 0 40px ${particle.skill.glowColor}, 0 0 60px ${particle.skill.glowColor}`
                 : `0 4px 12px rgba(0,0,0,0.2)`,
+              transition: particle.isDragging ? 'none' : 'box-shadow 0.3s ease, z-index 0s',
             }}
             onMouseDown={(e) => handleMouseDown(e, particle.id)}
+            onMouseEnter={() => handleMouseEnter(particle.id)}
+            onMouseLeave={() => handleMouseLeave(particle.id)}
             onTouchStart={(e) => handleTouchStart(e, particle.id)}
           >
             <span className="flex items-center justify-center h-full whitespace-nowrap">

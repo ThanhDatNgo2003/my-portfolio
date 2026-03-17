@@ -1,38 +1,65 @@
 "use client"
 
-import { useEffect, useRef, createContext, useContext, type ReactNode } from "react"
+import { useEffect, useRef, createContext, useContext, useState, type ReactNode } from "react"
 import Lenis from "lenis"
 
 interface LenisContextType {
   lenis: Lenis | null
+  scrollProgress: number
+  scrollVelocity: number
+  scrollDirection: "up" | "down" | null
 }
 
-const LenisContext = createContext<LenisContextType>({ lenis: null })
+const LenisContext = createContext<LenisContextType>({ 
+  lenis: null, 
+  scrollProgress: 0, 
+  scrollVelocity: 0,
+  scrollDirection: null 
+})
 
-export function useLenis() {
+export function useLenisScroll() {
   return useContext(LenisContext)
 }
 
 export default function LenisProvider({ children }: { children: ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null)
   const rafRef = useRef<number>()
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [scrollVelocity, setScrollVelocity] = useState(0)
+  const [scrollDirection, setScrollDirection] = useState<"up" | "down" | null>(null)
 
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.5,
+      duration: 1.8,
       easing: (t) => {
-        // Custom easing function for premium feel
-        return t === 1 ? 1 : 1 - Math.pow(2, -10 * t)
+        // Premium buttery smooth easing
+        return t < 0.5
+          ? 4 * t * t * t
+          : 1 - Math.pow(-2 * t + 2, 3) / 2
       },
       orientation: "vertical",
       gestureOrientation: "vertical",
       smoothWheel: true,
       smoothTouch: true,
-      touchMultiplier: 2.5,
+      touchMultiplier: 2,
       infinite: false,
     })
 
     lenisRef.current = lenis
+    
+    // Expose lenis globally for components that need direct access
+    ;(window as any).__lenis = lenis
+
+    // Track scroll progress and velocity
+    lenis.on("scroll", ({ progress, velocity, direction }: { progress: number; velocity: number; direction: number }) => {
+      setScrollProgress(progress)
+      setScrollVelocity(Math.abs(velocity))
+      setScrollDirection(direction > 0 ? "down" : direction < 0 ? "up" : null)
+      
+      // Update CSS custom properties for scroll-driven animations
+      document.documentElement.style.setProperty("--scroll-progress", progress.toString())
+      document.documentElement.style.setProperty("--scroll-velocity", Math.min(Math.abs(velocity) * 0.1, 1).toString())
+    })
 
     const raf = (time: number) => {
       lenis.raf(time)
@@ -41,7 +68,7 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
 
     rafRef.current = requestAnimationFrame(raf)
 
-    // Enhanced anchor link handling
+    // Enhanced anchor link handling with smooth scroll
     const handleAnchorClick = (e: Event) => {
       const anchor = e.currentTarget as HTMLAnchorElement
       const href = anchor.getAttribute("href")
@@ -52,7 +79,7 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
         if (target) {
           lenis.scrollTo(target as HTMLElement, {
             offset: -80,
-            duration: 1.5,
+            duration: 2,
           })
         }
       }
@@ -81,11 +108,17 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
         cancelAnimationFrame(rafRef.current)
       }
       lenis.destroy()
+      delete (window as any).__lenis
     }
   }, [])
 
   return (
-    <LenisContext.Provider value={{ lenis: lenisRef.current }}>
+    <LenisContext.Provider value={{ 
+      lenis: lenisRef.current, 
+      scrollProgress, 
+      scrollVelocity,
+      scrollDirection 
+    }}>
       {children}
     </LenisContext.Provider>
   )
