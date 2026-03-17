@@ -15,69 +15,6 @@ const DesktopPCModel = dynamic(() => import("./desktop-pc-model"), {
   ),
 })
 
-const techStack = [
-  { name: "Next.js", color: "bg-foreground/10 text-foreground border-foreground/30", icon: "N" },
-  { name: "React", color: "bg-[#61DAFB]/20 text-[#61DAFB] border-[#61DAFB]/30", icon: "R" },
-  { name: "Docker", color: "bg-[#2496ED]/20 text-[#2496ED] border-[#2496ED]/30", icon: "D" },
-  { name: "Linux", color: "bg-[#FCC624]/20 text-[#FCC624] border-[#FCC624]/30", icon: "L" },
-  { name: "PostgreSQL", color: "bg-[#4169E1]/20 text-[#4169E1] border-[#4169E1]/30", icon: "P" },
-  { name: "Node.js", color: "bg-[#339933]/20 text-[#339933] border-[#339933]/30", icon: "N" },
-  { name: "Raspberry Pi", color: "bg-[#A22846]/20 text-[#A22846] border-[#A22846]/30", icon: "R" },
-]
-
-// Interactive tech badge with 3D tilt
-function TechBadge({ 
-  tech, 
-  index, 
-  isVisible 
-}: { 
-  tech: typeof techStack[0]
-  index: number
-  isVisible: boolean 
-}) {
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
-  const [isHovered, setIsHovered] = useState(false)
-  const badgeRef = useRef<HTMLDivElement>(null)
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!badgeRef.current) return
-    const rect = badgeRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left - rect.width / 2) / rect.width
-    const y = (e.clientY - rect.top - rect.height / 2) / rect.height
-    setTilt({ x: y * 20, y: -x * 20 })
-  }
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 })
-    setIsHovered(false)
-  }
-
-  return (
-    <div
-      ref={badgeRef}
-      className={cn(
-        "tech-badge relative px-5 py-3 rounded-xl text-sm font-mono border transition-all duration-500 cursor-pointer",
-        tech.color,
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
-        isHovered && "scale-110 z-10"
-      )}
-      style={{ 
-        transitionDelay: `${600 + index * 100}ms`,
-        transform: `perspective(500px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) ${isHovered ? "scale(1.1)" : "scale(1)"}`,
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      data-magnetic
-    >
-      <span className="relative z-10">{tech.name}</span>
-      {isHovered && (
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/20 to-secondary/20 blur-sm -z-10" />
-      )}
-    </div>
-  )
-}
-
 // Animated counter for stats
 function AnimatedStat({ value, label, delay }: { value: string; label: string; delay: number }) {
   const [isVisible, setIsVisible] = useState(false)
@@ -202,24 +139,6 @@ export default function About() {
               <AnimatedStat value="3+" label="Years Experience" delay={0} />
               <AnimatedStat value="20+" label="Projects" delay={200} />
               <AnimatedStat value="10+" label="Technologies" delay={400} />
-            </div>
-
-            {/* Tech Stack */}
-            <div className="pt-4">
-              <h3 className="font-mono text-sm text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-8 h-px bg-primary" />
-                Tech Stack
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {techStack.map((tech, index) => (
-                  <TechBadge
-                    key={tech.name}
-                    tech={tech}
-                    index={index}
-                    isVisible={contentVisible}
-                  />
-                ))}
-              </div>
             </div>
           </div>
         </div>
