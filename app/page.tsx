@@ -19,6 +19,15 @@ const MagneticCursor = dynamic(() => import("@/components/magnetic-cursor"), {
   ssr: false,
 })
 
+const SkillsPhysics = dynamic(() => import("@/components/skills-physics"), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-16 h-16 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  ),
+})
+
 export default function Home() {
   return (
     <LenisProvider>
@@ -43,7 +52,15 @@ export default function Home() {
         <SectionDivider />
         
         <ParallaxText direction="right" speed={40}>
-          DEVOPS
+          SKILLS
+        </ParallaxText>
+        
+        <SkillsPhysics />
+        
+        <SectionDivider />
+        
+        <ParallaxText direction="left" speed={35}>
+          PROJECTS
         </ParallaxText>
         
         <Projects3DEnhanced />

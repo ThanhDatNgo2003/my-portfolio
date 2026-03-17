@@ -117,9 +117,9 @@ export default function Hero() {
     }
   }
 
-  // Parallax calculations
+  // Parallax calculations - only affect content, not the section background
   const parallaxY = scrollY * 0.3
-  const parallaxOpacity = Math.max(0, 1 - scrollY / 600)
+  const contentOpacity = Math.max(0, 1 - scrollY / 600)
 
   return (
     <section
@@ -129,7 +129,6 @@ export default function Hero() {
         "min-h-screen flex flex-col items-center justify-center px-6 pt-20 relative overflow-hidden",
         isVisible ? "opacity-100" : "opacity-0"
       )}
-      style={{ opacity: parallaxOpacity }}
     >
       {/* Animated gradient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -171,7 +170,7 @@ export default function Hero() {
       <div 
         ref={containerRef}
         className="text-center max-w-5xl mx-auto relative z-10"
-        style={{ transform: `translateY(${parallaxY}px)` }}
+        style={{ transform: `translateY(${parallaxY}px)`, opacity: contentOpacity }}
       >
         {/* Welcome badge */}
         <div 
@@ -256,7 +255,7 @@ export default function Hero() {
       {/* Enhanced Scroll Down Indicator */}
       <div 
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
-        style={{ opacity: parallaxOpacity }}
+        style={{ opacity: contentOpacity }}
       >
         <button
           onClick={() => scrollToSection("about")}
