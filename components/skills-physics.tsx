@@ -1,9 +1,10 @@
 "use client"
 
-import { useRef, useState, useEffect, useMemo } from "react"
+import { useRef, useState, useEffect, Suspense } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Physics, RigidBody, CuboidCollider, RapierRigidBody } from "@react-three/rapier"
+import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier"
 import { Text, RoundedBox } from "@react-three/drei"
+import type { RapierRigidBody } from "@react-three/rapier"
 import * as THREE from "three"
 
 // Skills data with colors
@@ -26,34 +27,39 @@ const skills = [
   { name: "Nginx", color: "#009639" },
 ]
 
+// Generate stable initial positions
+const initialPositions = skills.map((_, index) => ({
+  x: (Math.random() - 0.5) * 10,
+  y: 8 + index * 0.8,
+  z: (Math.random() - 0.5) * 3,
+  rotX: (Math.random() - 0.5) * 0.5,
+  rotY: (Math.random() - 0.5) * Math.PI,
+  rotZ: (Math.random() - 0.5) * 0.5,
+}))
+
 // Single skill pill component with physics
 function SkillPill({ 
   skill, 
   index, 
   isActive,
-  draggedRef,
-  setDraggedRef
+  onDragStart,
+  onDragEnd,
+  isDragging
 }: { 
   skill: typeof skills[0]
   index: number
   isActive: boolean
-  draggedRef: React.MutableRefObject<RapierRigidBody | null>
-  setDraggedRef: (ref: RapierRigidBody | null) => void
+  onDragStart: (ref: RapierRigidBody) => void
+  onDragEnd: () => void
+  isDragging: boolean
 }) {
   const rigidBodyRef = useRef<RapierRigidBody>(null)
-  const meshRef = useRef<THREE.Group>(null)
   const [isHovered, setIsHovered] = useState(false)
   const [hasDropped, setHasDropped] = useState(false)
-  const throwVelocity = useRef<THREE.Vector3 | null>(null)
-  const lastPosition = useRef<THREE.Vector3>(new THREE.Vector3())
-  const returnTimer = useRef<NodeJS.Timeout | null>(null)
+  const lastPos = useRef({ x: 0, y: 0, z: 0 })
+  const velocity = useRef({ x: 0, y: 0, z: 0 })
   
-  // Calculate initial position spread across the top
-  const initialX = useMemo(() => (Math.random() - 0.5) * 12, [])
-  const initialY = useMemo(() => 8 + Math.random() * 6 + index * 0.5, [index])
-  const initialZ = useMemo(() => (Math.random() - 0.5) * 4, [])
-  
-  // Pill dimensions based on text length
+  const pos = initialPositions[index]
   const pillWidth = skill.name.length * 0.18 + 0.8
   const pillHeight = 0.5
   const pillDepth = 0.3
@@ -61,12 +67,11 @@ function SkillPill({
   // Drop the pill when section becomes active
   useEffect(() => {
     if (isActive && !hasDropped && rigidBodyRef.current) {
-      const delay = index * 80 + Math.random() * 200
-      setTimeout(() => {
+      const delay = index * 100 + Math.random() * 200
+      const timer = setTimeout(() => {
         if (rigidBodyRef.current) {
           rigidBodyRef.current.setBodyType(0, true) // Dynamic
           rigidBodyRef.current.wakeUp()
-          // Add slight random rotation on drop
           rigidBodyRef.current.setAngvel({
             x: (Math.random() - 0.5) * 2,
             y: (Math.random() - 0.5) * 2,
@@ -75,107 +80,91 @@ function SkillPill({
           setHasDropped(true)
         }
       }, delay)
+      return () => clearTimeout(timer)
     }
   }, [isActive, hasDropped, index])
 
-  // Track velocity for throwing
+  // Track velocity and handle out-of-bounds reset
   useFrame(() => {
-    if (rigidBodyRef.current && meshRef.current) {
-      const pos = rigidBodyRef.current.translation()
-      
-      if (draggedRef.current === rigidBodyRef.current) {
-        // Calculate velocity based on position change
-        throwVelocity.current = new THREE.Vector3(
-          pos.x - lastPosition.current.x,
-          pos.y - lastPosition.current.y,
-          pos.z - lastPosition.current.z
-        ).multiplyScalar(60) // Scale for impulse
-      }
-      
-      lastPosition.current.set(pos.x, pos.y, pos.z)
-      
-      // Return objects that go too far
-      if (Math.abs(pos.x) > 20 || Math.abs(pos.z) > 20 || pos.y < -10) {
-        if (!returnTimer.current) {
-          returnTimer.current = setTimeout(() => {
-            if (rigidBodyRef.current) {
-              // Reset position to drop from above again
-              rigidBodyRef.current.setTranslation({
-                x: (Math.random() - 0.5) * 8,
-                y: 10 + Math.random() * 3,
-                z: (Math.random() - 0.5) * 3
-              }, true)
-              rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
-              rigidBodyRef.current.setAngvel({
-                x: (Math.random() - 0.5) * 2,
-                y: (Math.random() - 0.5) * 2,
-                z: (Math.random() - 0.5) * 2
-              }, true)
-            }
-            returnTimer.current = null
-          }, 2000)
-        }
-      }
+    if (!rigidBodyRef.current) return
+    
+    const currentPos = rigidBodyRef.current.translation()
+    
+    // Track velocity for throwing
+    velocity.current = {
+      x: (currentPos.x - lastPos.current.x) * 60,
+      y: (currentPos.y - lastPos.current.y) * 60,
+      z: (currentPos.z - lastPos.current.z) * 60
+    }
+    lastPos.current = { x: currentPos.x, y: currentPos.y, z: currentPos.z }
+    
+    // Reset if out of bounds
+    if (Math.abs(currentPos.x) > 15 || Math.abs(currentPos.z) > 15 || currentPos.y < -8) {
+      rigidBodyRef.current.setTranslation({
+        x: (Math.random() - 0.5) * 6,
+        y: 10,
+        z: (Math.random() - 0.5) * 2
+      }, true)
+      rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
     }
   })
   
-  const handlePointerDown = (e: THREE.Event) => {
+  const handlePointerDown = (e: { stopPropagation: () => void }) => {
     e.stopPropagation()
-    if (rigidBodyRef.current) {
-      setDraggedRef(rigidBodyRef.current)
+    if (rigidBodyRef.current && hasDropped) {
       rigidBodyRef.current.setBodyType(1, true) // Kinematic
+      onDragStart(rigidBodyRef.current)
     }
   }
   
   const handlePointerUp = () => {
-    if (rigidBodyRef.current && draggedRef.current === rigidBodyRef.current) {
+    if (rigidBodyRef.current && isDragging) {
       rigidBodyRef.current.setBodyType(0, true) // Dynamic
       
-      // Apply throw velocity as impulse
-      if (throwVelocity.current && throwVelocity.current.length() > 0.5) {
-        const impulse = throwVelocity.current.multiplyScalar(0.8)
+      // Apply throw impulse
+      const speed = Math.sqrt(
+        velocity.current.x ** 2 + 
+        velocity.current.y ** 2 + 
+        velocity.current.z ** 2
+      )
+      
+      if (speed > 1) {
         rigidBodyRef.current.applyImpulse({
-          x: impulse.x,
-          y: Math.max(impulse.y, 2), // Ensure some upward movement
-          z: impulse.z
+          x: velocity.current.x * 0.5,
+          y: Math.max(velocity.current.y * 0.5, 1),
+          z: velocity.current.z * 0.5
         }, true)
         
-        // Add spin based on throw direction
         rigidBodyRef.current.applyTorqueImpulse({
-          x: impulse.z * 0.3,
+          x: velocity.current.z * 0.2,
           y: 0,
-          z: -impulse.x * 0.3
+          z: -velocity.current.x * 0.2
         }, true)
       }
       
-      setDraggedRef(null)
-      throwVelocity.current = null
+      onDragEnd()
     }
   }
 
   return (
     <RigidBody
       ref={rigidBodyRef}
-      position={[initialX, initialY, initialZ]}
-      rotation={[(Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * Math.PI, (Math.random() - 0.5) * 0.5]}
+      position={[pos.x, pos.y, pos.z]}
+      rotation={[pos.rotX, pos.rotY, pos.rotZ]}
       colliders={false}
-      type="fixed" // Start as fixed, change to dynamic when dropping
-      restitution={0.5}
-      friction={0.3}
-      linearDamping={0.5}
-      angularDamping={0.5}
-      mass={1}
+      type="fixed"
+      restitution={0.6}
+      friction={0.4}
+      linearDamping={0.3}
+      angularDamping={0.3}
     >
       <CuboidCollider args={[pillWidth / 2, pillHeight / 2, pillDepth / 2]} />
       <group
-        ref={meshRef}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
         onPointerOver={() => setIsHovered(true)}
-        onPointerOut={() => {
-          setIsHovered(false)
-          handlePointerUp()
-        }}
+        onPointerOut={() => setIsHovered(false)}
       >
         <RoundedBox
           args={[pillWidth, pillHeight, pillDepth]}
@@ -185,31 +174,27 @@ function SkillPill({
           <meshStandardMaterial
             color={skill.color}
             emissive={skill.color}
-            emissiveIntensity={isHovered ? 0.4 : 0.15}
+            emissiveIntensity={isHovered ? 0.5 : 0.2}
             roughness={0.3}
             metalness={0.1}
           />
         </RoundedBox>
         <Text
           position={[0, 0, pillDepth / 2 + 0.01]}
-          fontSize={0.22}
+          fontSize={0.2}
           color="#000000"
-          font="/fonts/inter-bold.woff"
           anchorX="center"
           anchorY="middle"
-          fontWeight="bold"
         >
           {skill.name}
         </Text>
         <Text
           position={[0, 0, -pillDepth / 2 - 0.01]}
-          fontSize={0.22}
+          fontSize={0.2}
           color="#000000"
           rotation={[0, Math.PI, 0]}
-          font="/fonts/inter-bold.woff"
           anchorX="center"
           anchorY="middle"
-          fontWeight="bold"
         >
           {skill.name}
         </Text>
@@ -218,27 +203,26 @@ function SkillPill({
   )
 }
 
-// Drag handler component
-function DragHandler({ 
-  draggedRef 
+// Drag controller
+function DragController({ 
+  draggedBody 
 }: { 
-  draggedRef: React.MutableRefObject<RapierRigidBody | null>
+  draggedBody: RapierRigidBody | null
 }) {
   const { camera, pointer } = useThree()
-  const planeNormal = useMemo(() => new THREE.Vector3(0, 0, 1), [])
-  const plane = useMemo(() => new THREE.Plane(planeNormal, 0), [planeNormal])
-  const intersection = useMemo(() => new THREE.Vector3(), [])
+  const plane = useRef(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0))
+  const intersection = useRef(new THREE.Vector3())
   
   useFrame(() => {
-    if (draggedRef.current) {
+    if (draggedBody) {
       const raycaster = new THREE.Raycaster()
       raycaster.setFromCamera(pointer, camera)
-      raycaster.ray.intersectPlane(plane, intersection)
+      raycaster.ray.intersectPlane(plane.current, intersection.current)
       
-      draggedRef.current.setNextKinematicTranslation({
-        x: intersection.x,
-        y: Math.max(intersection.y, -2),
-        z: intersection.z
+      draggedBody.setNextKinematicTranslation({
+        x: intersection.current.x,
+        y: Math.max(intersection.current.y, -2),
+        z: 0
       })
     }
   })
@@ -246,65 +230,44 @@ function DragHandler({
   return null
 }
 
-// Floor and walls
+// Boundaries
 function Boundaries() {
   return (
     <>
       {/* Floor */}
-      <RigidBody type="fixed" position={[0, -3, 0]}>
-        <CuboidCollider args={[15, 0.5, 10]} />
+      <RigidBody type="fixed" position={[0, -3.5, 0]}>
+        <CuboidCollider args={[12, 0.5, 8]} />
       </RigidBody>
-      
-      {/* Left wall */}
-      <RigidBody type="fixed" position={[-10, 2, 0]}>
-        <CuboidCollider args={[0.5, 10, 10]} />
+      {/* Walls */}
+      <RigidBody type="fixed" position={[-8, 3, 0]}>
+        <CuboidCollider args={[0.5, 8, 8]} />
       </RigidBody>
-      
-      {/* Right wall */}
-      <RigidBody type="fixed" position={[10, 2, 0]}>
-        <CuboidCollider args={[0.5, 10, 10]} />
+      <RigidBody type="fixed" position={[8, 3, 0]}>
+        <CuboidCollider args={[0.5, 8, 8]} />
       </RigidBody>
-      
-      {/* Back wall */}
-      <RigidBody type="fixed" position={[0, 2, -6]}>
-        <CuboidCollider args={[15, 10, 0.5]} />
+      <RigidBody type="fixed" position={[0, 3, -5]}>
+        <CuboidCollider args={[12, 8, 0.5]} />
       </RigidBody>
-      
-      {/* Front wall (invisible, prevents items from coming too close) */}
-      <RigidBody type="fixed" position={[0, 2, 6]}>
-        <CuboidCollider args={[15, 10, 0.5]} />
+      <RigidBody type="fixed" position={[0, 3, 5]}>
+        <CuboidCollider args={[12, 8, 0.5]} />
       </RigidBody>
     </>
   )
 }
 
-// Lighting setup
-function Lighting() {
-  return (
-    <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
-      <pointLight position={[-5, 5, 5]} intensity={0.5} color="#61DAFB" />
-      <pointLight position={[5, 5, -5]} intensity={0.5} color="#E10098" />
-    </>
-  )
-}
-
-// Main physics scene
-function PhysicsSkillsScene({ isActive }: { isActive: boolean }) {
-  const draggedRef = useRef<RapierRigidBody | null>(null)
-  const [, setDraggedState] = useState<RapierRigidBody | null>(null)
-  
-  const setDraggedRef = (ref: RapierRigidBody | null) => {
-    draggedRef.current = ref
-    setDraggedState(ref)
-  }
+// Physics scene
+function PhysicsScene({ isActive }: { isActive: boolean }) {
+  const [draggedBody, setDraggedBody] = useState<RapierRigidBody | null>(null)
 
   return (
-    <Physics gravity={[0, -15, 0]}>
-      <Lighting />
+    <Physics gravity={[0, -12, 0]}>
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[5, 10, 5]} intensity={1} />
+      <pointLight position={[-5, 5, 5]} intensity={0.4} color="#61DAFB" />
+      <pointLight position={[5, 5, -5]} intensity={0.4} color="#E10098" />
+      
       <Boundaries />
-      <DragHandler draggedRef={draggedRef} />
+      <DragController draggedBody={draggedBody} />
       
       {skills.map((skill, index) => (
         <SkillPill
@@ -312,15 +275,26 @@ function PhysicsSkillsScene({ isActive }: { isActive: boolean }) {
           skill={skill}
           index={index}
           isActive={isActive}
-          draggedRef={draggedRef}
-          setDraggedRef={setDraggedRef}
+          onDragStart={setDraggedBody}
+          onDragEnd={() => setDraggedBody(null)}
+          isDragging={draggedBody !== null}
         />
       ))}
     </Physics>
   )
 }
 
-// Main exported component
+// Loading indicator
+function Loading() {
+  return (
+    <mesh>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color="#61DAFB" wireframe />
+    </mesh>
+  )
+}
+
+// Main component
 export default function SkillsPhysics() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isActive, setIsActive] = useState(false)
@@ -329,18 +303,17 @@ export default function SkillsPhysics() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && !isVisible) {
           setIsVisible(true)
-          // Delay physics activation slightly for smoother experience
-          setTimeout(() => setIsActive(true), 300)
+          setTimeout(() => setIsActive(true), 500)
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.15 }
     )
 
     if (containerRef.current) observer.observe(containerRef.current)
     return () => observer.disconnect()
-  }, [])
+  }, [isVisible])
 
   return (
     <section
@@ -348,7 +321,7 @@ export default function SkillsPhysics() {
       ref={containerRef}
       className="relative min-h-screen py-24 px-6 overflow-hidden"
     >
-      {/* Section header */}
+      {/* Header */}
       <div className="container mx-auto max-w-6xl relative z-10">
         <div className="text-center mb-8">
           <h2 
@@ -376,16 +349,17 @@ export default function SkillsPhysics() {
       {/* 3D Canvas */}
       <div className="absolute inset-0 top-32">
         <Canvas
-          camera={{ position: [0, 2, 12], fov: 50 }}
-          dpr={[1, 2]}
+          camera={{ position: [0, 2, 10], fov: 50 }}
+          dpr={[1, 1.5]}
           gl={{ antialias: true, alpha: true }}
-          style={{ background: "transparent" }}
         >
-          <PhysicsSkillsScene isActive={isActive} />
+          <Suspense fallback={<Loading />}>
+            <PhysicsScene isActive={isActive} />
+          </Suspense>
         </Canvas>
       </div>
       
-      {/* Interaction hint */}
+      {/* Hint */}
       <div 
         className={`absolute bottom-8 left-1/2 -translate-x-1/2 text-center transition-all duration-700 delay-1000 ${
           isVisible ? "opacity-60" : "opacity-0"
