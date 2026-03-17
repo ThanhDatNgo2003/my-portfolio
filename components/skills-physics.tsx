@@ -301,19 +301,23 @@ export default function SkillsPhysics() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !isVisible) {
+        if (entry.isIntersecting) {
           setIsVisible(true)
           setTimeout(() => setIsActive(true), 500)
+          observer.disconnect()
         }
       },
       { threshold: 0.15 }
     )
 
-    if (containerRef.current) observer.observe(containerRef.current)
+    observer.observe(container)
     return () => observer.disconnect()
-  }, [isVisible])
+  }, [])
 
   return (
     <section
