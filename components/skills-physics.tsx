@@ -159,7 +159,7 @@ export default function SkillsPhysics() {
         }
       })
 
-      // Collision detection between particles
+      // Collision detection between particles - improved for proper bouncing
       for (let i = 0; i < particlesRef.current.length; i++) {
         for (let j = i + 1; j < particlesRef.current.length; j++) {
           const p1 = particlesRef.current[i]
@@ -170,29 +170,45 @@ export default function SkillsPhysics() {
           const dx = p2.x - p1.x
           const dy = p2.y - p1.y
           const dist = Math.sqrt(dx * dx + dy * dy)
-          const minDist = (p1.width + p2.width) / 3
+          const minDist = (p1.width + p2.width) / 2.5
           
           if (dist < minDist && dist > 0) {
-            // Push apart
-            const overlap = (minDist - dist) / 2
+            // Normalize collision vector
             const nx = dx / dist
             const ny = dy / dist
             
-            particlesRef.current[i] = {
-              ...p1,
-              x: p1.x - nx * overlap,
-              y: p1.y - ny * overlap,
-              vx: p1.vx - nx * 2,
-              vy: p1.vy - ny * 2,
-              angularVel: p1.angularVel + (Math.random() - 0.5) * 2,
-            }
-            particlesRef.current[j] = {
-              ...p2,
-              x: p2.x + nx * overlap,
-              y: p2.y + ny * overlap,
-              vx: p2.vx + nx * 2,
-              vy: p2.vy + ny * 2,
-              angularVel: p2.angularVel + (Math.random() - 0.5) * 2,
+            // Calculate relative velocity
+            const dvx = p1.vx - p2.vx
+            const dvy = p1.vy - p2.vy
+            
+            // Relative velocity along collision normal
+            const dvn = dvx * nx + dvy * ny
+            
+            // Only resolve if particles are moving towards each other
+            if (dvn > 0) {
+              // Collision impulse (assuming equal mass)
+              const restitution = 0.8
+              const impulse = dvn * restitution
+              
+              // Push apart to prevent overlap
+              const overlap = (minDist - dist) / 2
+              
+              particlesRef.current[i] = {
+                ...p1,
+                x: p1.x - nx * overlap * 1.1,
+                y: p1.y - ny * overlap * 1.1,
+                vx: p1.vx - impulse * nx,
+                vy: p1.vy - impulse * ny,
+                angularVel: p1.angularVel + (dvn * 0.1) * (Math.random() > 0.5 ? 1 : -1),
+              }
+              particlesRef.current[j] = {
+                ...p2,
+                x: p2.x + nx * overlap * 1.1,
+                y: p2.y + ny * overlap * 1.1,
+                vx: p2.vx + impulse * nx,
+                vy: p2.vy + impulse * ny,
+                angularVel: p2.angularVel + (dvn * 0.1) * (Math.random() > 0.5 ? 1 : -1),
+              }
             }
           }
         }
