@@ -108,7 +108,9 @@ export default function About() {
 
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           {/* 3D Desktop PC Model */}
-          <DesktopPCModel isVisible={sectionVisible} />
+          <div className="flex justify-center">
+            <DesktopPCModel isVisible={sectionVisible} />
+          </div>
 
           {/* Bio Content */}
           <div

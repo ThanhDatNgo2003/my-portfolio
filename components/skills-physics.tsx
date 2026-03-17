@@ -5,22 +5,22 @@ import { cn } from "@/lib/utils"
 
 // Skills data with theme-consistent colors (primary: #00D9FF, secondary: #7C3AED)
 const skills = [
-  { name: "React", color: "#00D9FF", textColor: "#0A0A0F" },
-  { name: "Next.js", color: "#1A1A24", textColor: "#E5E5E5" },
-  { name: "TypeScript", color: "#7C3AED", textColor: "#FFFFFF" },
-  { name: "Node.js", color: "#10B981", textColor: "#0A0A0F" },
-  { name: "Docker", color: "#00D9FF", textColor: "#0A0A0F" },
-  { name: "PostgreSQL", color: "#7C3AED", textColor: "#FFFFFF" },
-  { name: "Linux", color: "#F59E0B", textColor: "#0A0A0F" },
-  { name: "AWS", color: "#1A1A24", textColor: "#E5E5E5" },
-  { name: "Python", color: "#00D9FF", textColor: "#0A0A0F" },
-  { name: "Git", color: "#EF4444", textColor: "#FFFFFF" },
-  { name: "Kubernetes", color: "#7C3AED", textColor: "#FFFFFF" },
-  { name: "Redis", color: "#EF4444", textColor: "#FFFFFF" },
-  { name: "GraphQL", color: "#7C3AED", textColor: "#FFFFFF" },
-  { name: "Tailwind", color: "#00D9FF", textColor: "#0A0A0F" },
-  { name: "MongoDB", color: "#10B981", textColor: "#0A0A0F" },
-  { name: "Nginx", color: "#1A1A24", textColor: "#E5E5E5" },
+  { name: "React", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "Next.js", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
+  { name: "TypeScript", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Node.js", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "Docker", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "PostgreSQL", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Linux", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
+  { name: "AWS", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
+  { name: "Python", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "Git", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Kubernetes", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Redis", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "GraphQL", color: "#7C3AED", glowColor: "rgba(124, 58, 237, 0.6)", textColor: "#FFFFFF" },
+  { name: "Tailwind", color: "#00D9FF", glowColor: "rgba(0, 217, 255, 0.6)", textColor: "#0A0A0F" },
+  { name: "MongoDB", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
+  { name: "Nginx", color: "#1A1A24", glowColor: "rgba(0, 217, 255, 0.4)", textColor: "#E5E5E5" },
 ]
 
 interface Particle {
@@ -35,6 +35,7 @@ interface Particle {
   height: number
   skill: typeof skills[0]
   isDragging: boolean
+  isHovered: boolean
 }
 
 // Simple physics constants
@@ -74,6 +75,7 @@ export default function SkillsPhysics() {
       height: 44,
       skill,
       isDragging: false,
+      isHovered: false,
     }))
     
     particlesRef.current = newParticles
@@ -361,6 +363,21 @@ export default function SkillsPhysics() {
     dragRef.current = null
   }, [])
 
+  // Hover handlers for light effect
+  const handleMouseEnter = useCallback((particleId: number) => {
+    particlesRef.current = particlesRef.current.map(p => 
+      p.id === particleId ? { ...p, isHovered: true } : p
+    )
+    setParticles([...particlesRef.current])
+  }, [])
+
+  const handleMouseLeave = useCallback((particleId: number) => {
+    particlesRef.current = particlesRef.current.map(p => 
+      p.id === particleId ? { ...p, isHovered: false } : p
+    )
+    setParticles([...particlesRef.current])
+  }, [])
+
   return (
     <section
       id="skills"
@@ -409,9 +426,8 @@ export default function SkillsPhysics() {
           <div
             key={particle.id}
             className={cn(
-              "absolute select-none",
-              "rounded-full px-5 py-2.5 font-semibold text-sm shadow-lg",
-              "transition-shadow duration-200 hover:shadow-xl",
+              "absolute select-none cursor-grab active:cursor-grabbing",
+              "rounded-full px-5 py-2.5 font-semibold text-sm",
               "border border-white/10"
             )}
             style={{
@@ -422,12 +438,17 @@ export default function SkillsPhysics() {
               backgroundColor: particle.skill.color,
               color: particle.skill.textColor,
               transform: `rotate(${particle.rotation}deg)`,
-              zIndex: particle.isDragging ? 100 : 10,
+              zIndex: particle.isDragging ? 100 : particle.isHovered ? 50 : 10,
               boxShadow: particle.isDragging 
-                ? `0 20px 40px rgba(0,0,0,0.3), 0 0 20px ${particle.skill.color}50`
+                ? `0 20px 40px rgba(0,0,0,0.3), 0 0 30px ${particle.skill.glowColor}`
+                : particle.isHovered
+                ? `0 8px 24px rgba(0,0,0,0.25), 0 0 40px ${particle.skill.glowColor}, 0 0 60px ${particle.skill.glowColor}`
                 : `0 4px 12px rgba(0,0,0,0.2)`,
+              transition: particle.isDragging ? 'none' : 'box-shadow 0.3s ease, z-index 0s',
             }}
             onMouseDown={(e) => handleMouseDown(e, particle.id)}
+            onMouseEnter={() => handleMouseEnter(particle.id)}
+            onMouseLeave={() => handleMouseLeave(particle.id)}
             onTouchStart={(e) => handleTouchStart(e, particle.id)}
           >
             <span className="flex items-center justify-center h-full whitespace-nowrap">

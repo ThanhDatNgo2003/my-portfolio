@@ -392,9 +392,10 @@ section {
   scroll-snap-align: start;
 }
 
-/* Smooth transitions */
-* {
-  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+/* Smooth transitions - only applied to specific interactive elements */
+a, button, input, textarea, select {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: 150ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 

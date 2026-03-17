@@ -116,7 +116,7 @@ export default function DesktopPCModel({ isVisible }: { isVisible: boolean }) {
   return (
     <div
       ref={containerRef}
-      className={`relative mx-auto md:mx-0 w-[400px] h-[400px] md:w-[600px] md:h-[600px] rounded-2xl overflow-hidden transition-all duration-700 delay-200 ${
+      className={`relative mx-auto w-[400px] h-[400px] md:w-[500px] md:h-[500px] rounded-2xl overflow-hidden transition-all duration-700 delay-200 ${
         isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
       }`}
     >
